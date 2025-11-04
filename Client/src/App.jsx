@@ -6,19 +6,21 @@ import Trash from "./pages/Trash";
 import TaskDetails from "./pages/TaskDetails";
 import Login from "./pages/Login";
 import { Toaster } from "sonner";
+import { useSelector } from "react-redux";
+import Sidebar from "./components/Sidebar";
 
 function Layout() {
-	const user = "";
+	const {user} = useSelector((state)=>state.auth);
 	const location = useLocation();
-	return user ? (
+	return true ? (
 		<div className="w-full h-screen flex flex-col md:flex-row">
 			<div className="w-1/5 h-screen bg-white sticky top-0 hidden md:block">
-				{/* <Sidebar/> */}
+				<Sidebar />
 			</div>
 			{/* <MobileSidebar/> */}
 			<div className="flex-1 overflow-y-auto">
 				{/* <Navbar/> */}
-				<div className="p-4 2xl:px-10">{/* <Outlet/> */}</div>
+				<div className="p-4 2xl:px-10"><Outlet/></div>
 			</div>
 		</div>
 	) : (
