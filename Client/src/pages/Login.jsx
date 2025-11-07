@@ -35,6 +35,7 @@ const Login = () => {
 							<span>Task-manager</span>
 						</p>
 					</div>
+			
 				</div>
 				{/* right-side */}
 				<div className="w-full md:w-1/3 p-4 md:p-1 flex flex-col justify-center items-center ">

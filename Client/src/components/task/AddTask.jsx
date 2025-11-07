@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ModalWrapper from "../ModalWrapper";
 import { Dialog } from "@headlessui/react";
 import Textbox from "../Textbox";
@@ -15,6 +15,11 @@ const uploadedFileURLs = [];
 
 const AddTask = ({ open, setOpen }) => {
   const task = "";
+  console.log("AddTask rendered, open:", open);
+
+  useEffect(() => {
+    console.log("Tasks open state changed:", open);
+  }, [open]);
 
   const {
     register,
