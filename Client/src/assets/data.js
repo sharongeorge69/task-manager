@@ -564,9 +564,9 @@ export const summary = {
       },
     ],
     tasks: {
-      todo: 6,
-      "in progress": 3,
-      completed: 1,
+      todo: 7,
+      "in progress": 4,
+      completed: 5,
     },
   };
   
