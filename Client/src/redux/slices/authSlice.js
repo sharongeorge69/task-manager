@@ -5,7 +5,7 @@ const initialState = {
 		? JSON.parse(localStorage.getItem("userInfo"))
 		: null,
 
-	isSiderbarOpen: false,
+	isSidebarOpen: false,
 };
 
 const authSlice = createSlice({
@@ -16,15 +16,15 @@ const authSlice = createSlice({
 			state.user = action.payload;
 			localStorage.setItem("userInfo", JSON.stringify(action.payload));
 		},
-        logout:(state,action)=>{
-            state.user = null;
-            localStorage.removeItem("userInfo");
-        },
-        setOpenSidebar:(state,action)=>{
-            state.isSideBarOpen = action.payload;
-        }
+		logout: (state, action) => {
+			state.user = null;
+			localStorage.removeItem("userInfo");
+		},
+		setOpenSidebar: (state, action) => {
+			state.isSidebarOpen = action.payload;
+		},
 	},
 });
 
-export const {setCredentials,logot,setOpenSidebar} = authSlice.actions;
-export default authSlice.reducer
+export const { setCredentials, logot, setOpenSidebar } = authSlice.actions;
+export default authSlice.reducer;

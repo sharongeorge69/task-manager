@@ -15,11 +15,6 @@ const uploadedFileURLs = [];
 
 const AddTask = ({ open, setOpen }) => {
   const task = "";
-  console.log("AddTask rendered, open:", open);
-
-  useEffect(() => {
-    console.log("Tasks open state changed:", open);
-  }, [open]);
 
   const {
     register,

@@ -84,7 +84,10 @@ const AddSubTask = ({ open, setOpen, id }) => {
             <Button
               type='button'
               className='bg-white border text-sm font-semibold text-gray-900 sm:w-auto'
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false)
+                console.log("clicked")
+              }}
               label='Cancel'
             />
           </div>

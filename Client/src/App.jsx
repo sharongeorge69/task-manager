@@ -16,7 +16,6 @@ import clsx from "clsx";
 import { Transition } from "@headlessui/react";
 import { IoClose } from "react-icons/io5";
 
-
 function Layout() {
 	const { user } = useSelector((state) => state.auth);
 	const location = useLocation();
@@ -25,7 +24,7 @@ function Layout() {
 			<div className="w-1/5 h-screen bg-white sticky top-0 hidden md:block">
 				<Sidebar />
 			</div>
-			<MobileSidebar/>
+			<MobileSidebar />
 			<div className="flex-1 overflow-y-auto">
 				<Navbar />
 				<div className="p-4 2xl:px-10">
@@ -39,7 +38,6 @@ function Layout() {
 	);
 }
 
-
 const MobileSidebar = () => {
 	const { isSidebarOpen } = useSelector((state) => state.auth);
 	const dispatch = useDispatch();
@@ -50,12 +48,23 @@ const MobileSidebar = () => {
 	};
 
 	return (
-		<Transition show={!!isSidebarOpen}>
-			{/* Backdrop */}
-			<div
-				className="fixed inset-0 z-50 md:hidden"
-				onClick={closeSidebar}
-			>
+		<Transition show={isSidebarOpen} as={Fragment}>
+			<div className="fixed inset-0 z-50 md:hidden">
+				{/* Backdrop */}
+				<Transition.Child
+					enter="transition-opacity duration-300"
+					enterFrom="opacity-0"
+					enterTo="opacity-100"
+					leave="transition-opacity duration-300"
+					leaveFrom="opacity-100"
+					leaveTo="opacity-0"
+				>
+					<div
+						className="absolute inset-0 bg-black/50"
+						onClick={closeSidebar}
+					/>
+				</Transition.Child>
+
 				{/* Animated Panel */}
 				<Transition.Child
 					enter="transition-transform duration-300 ease-out"
@@ -67,7 +76,7 @@ const MobileSidebar = () => {
 				>
 					<div
 						ref={sidebarRef}
-						className="absolute left-0 top-0 h-full w-3/4 bg-white shadow-xl"
+						className="absolute left-0 top-0 h-full w-3/4 bg-white shadow-xl z-10"
 						onClick={(e) => e.stopPropagation()}
 					>
 						{/* Close Button */}
@@ -85,18 +94,6 @@ const MobileSidebar = () => {
 							<Sidebar />
 						</div>
 					</div>
-				</Transition.Child>
-
-				{/* Optional: Fade backdrop */}
-				<Transition.Child
-					enter="transition-opacity duration-300"
-					enterFrom="opacity-0"
-					enterTo="opacity-100"
-					leave="transition-opacity duration-300"
-					leaveFrom="opacity-100"
-					leaveTo="opacity-0"
-				>
-					<div className="absolute inset-0 bg-black/50" />
 				</Transition.Child>
 			</div>
 		</Transition>
