@@ -1,17 +1,17 @@
 import express from "express";
 import {
-  createSubTask,
-  createTask,
-  dashboardStatistics,
-  deleteRestoreTask,
-  duplicateTask,
-  getTask,
-  getTasks,
-  postTaskActivity,
-  trashTask,
-  updateSubTaskStage,
-  updateTask,
-  updateTaskStage,
+	createSubTask,
+	createTask,
+	dashboardStatistics,
+	deleteRestoreTask,
+	duplicateTask,
+	getTask,
+	getTasks,
+	postTaskActivity,
+	trashTask,
+	updateSubTaskStage,
+	updateTask,
+	updateTaskStage,
 } from "../controllers/taskController.js";
 import { isAdminRoute, protectRoute } from "../middleware/authMiddleware.js";
 
@@ -29,17 +29,17 @@ router.put("/create-subtask/:id", protectRoute, isAdminRoute, createSubTask);
 router.put("/update/:id", protectRoute, isAdminRoute, updateTask);
 router.put("/change-stage/:id", protectRoute, updateTaskStage);
 router.put(
-  "/change-status/:taskId/:subTaskId",
-  protectRoute,
-  updateSubTaskStage
+	"/change-status/:taskId/:subTaskId",
+	protectRoute,
+	updateSubTaskStage
 );
 router.put("/:id", protectRoute, isAdminRoute, trashTask);
 
 router.delete(
-  "/delete-restore/:id?",
-  protectRoute,
-  isAdminRoute,
-  deleteRestoreTask
+	"/delete-restore/:id",
+	protectRoute,
+	isAdminRoute,
+	deleteRestoreTask
 );
 
 export default router;
