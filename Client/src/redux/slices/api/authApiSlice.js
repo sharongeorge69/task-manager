@@ -1,30 +1,33 @@
-import constants from "../../../utils/contants";
+import { USERS_URL } from "../../../utils/contants";
 import { apiSlice } from "../apiSlice";
 
 export const authApiSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
 		login: builder.mutation({
 			query: (data) => ({
-				url: `${constants.USERS_URL}/login`,
+				url: `${USERS_URL}/login`,
 				method: "POST",
 				body: data,
 				credentials: "include",
 			}),
+			invalidatesTags: ["User", "Team"],
 		}),
 		register: builder.mutation({
 			query: (data) => ({
-				url: `${constants.USERS_URL}/register`,
+				url: `${USERS_URL}/register`,
 				method: "POST",
 				body: data,
 				credentials: "include",
 			}),
+			invalidatesTags: [{ type: "Team", id: "LIST" }],
 		}),
 		logout: builder.mutation({
 			query: () => ({
-				url: `${constants.USERS_URL}/logout`,
+				url: `${USERS_URL}/logout`,
 				method: "POST",
 				credentials: "include",
 			}),
+			invalidatesTags: ["User", "Team"],
 		}),
 	}),
 });

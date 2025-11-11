@@ -15,10 +15,13 @@ const createJWT = (res, userId) => {
 		expiresIn: "1d",
 	});
 
+	// Default to development settings if NODE_ENV is not explicitly set to "production"
+	const isProduction = process.env.NODE_ENV === "production";
+	
 	res.cookie("token", token, {
 		httpOnly: true,
-		secure: process.env.NODE_ENV !== "development",
-		sameSite: "none",
+		secure: isProduction, // false in development, true in production
+		sameSite: isProduction ? "none" : "lax", // "lax" for localhost, "none" for cross-origin in production
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 	});
 
