@@ -3,7 +3,16 @@ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
 const protectRoute = asyncHandler(async (req, res, next) => {
+	// Try to get token from cookies first, then from Authorization header
 	let token = req.cookies.token;
+
+	// If no cookie token, try Authorization header (for Postman/API clients)
+	if (!token && req.headers.authorization) {
+		const authHeader = req.headers.authorization;
+		if (authHeader.startsWith("Bearer ")) {
+			token = authHeader.substring(7);
+		}
+	}
 
 	if (token) {
 		try {
@@ -27,7 +36,7 @@ const protectRoute = asyncHandler(async (req, res, next) => {
 
 			next();
 		} catch (error) {
-			console.error(error);
+			console.error("JWT verification error:", error);
 			return res
 				.status(401)
 				.json({ status: false, message: "Not authorized. Try login again." });

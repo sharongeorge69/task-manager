@@ -18,9 +18,11 @@ const createJWT = (res, userId) => {
 	res.cookie("token", token, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV !== "development",
-		sameSite: "strict",
+		sameSite: "none",
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 	});
+
+	return token; // Return token so it can be included in response body for API clients
 };
 
 export default createJWT;
