@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
 import Notice from "../models/notis.js";
-import Task from "../models/task.js";
+import Task from "../models/taskModel.js";
 import User from "../models/userModel.js";
 
 const createTask = asyncHandler(async (req, res) => {
@@ -9,39 +9,51 @@ const createTask = asyncHandler(async (req, res) => {
 		const { title, team, stage, date, priority, assets, links, description } =
 			req.body;
 
+		// Validate required fields
+		if (!title || !team || !Array.isArray(team) || team.length === 0) {
+			return res.status(400).json({
+				status: false,
+				message: "Title and team are required",
+			});
+		}
+
 		//alert users of the task
 		let text = "New task has been assigned to you";
 		if (team?.length > 1) {
 			text = text + ` and ${team?.length - 1} others.`;
 		}
 
+		const taskDate = date ? new Date(date) : new Date();
+		const taskPriority = priority || "medium";
+
 		text =
 			text +
-			` The task priority is set a ${priority} priority, so check and act accordingly. The task date is ${new Date(
-				date
-			).toDateString()}. Thank you!!!`;
+			` The task priority is set a ${taskPriority} priority, so check and act accordingly. The task date is ${taskDate.toDateString()}. Thank you!!!`;
 
 		const activity = {
 			type: "assigned",
 			activity: text,
 			by: userId,
+			date: new Date(),
 		};
-		let newLinks = null;
+		let newLinks = [];
 
 		if (links) {
-			newLinks = links?.split(",");
+			newLinks = Array.isArray(links)
+				? links
+				: links.split(",").filter((link) => link.trim());
 		}
 
 		const task = await Task.create({
 			title,
 			team,
-			stage: stage.toLowerCase(),
-			date,
-			priority: priority.toLowerCase(),
-			assets,
-			activities: activity,
-			links: newLinks || [],
-			description,
+			stage: stage ? stage.toLowerCase() : "todo",
+			date: taskDate,
+			priority: taskPriority.toLowerCase(),
+			assets: assets || [],
+			activities: [activity],
+			links: newLinks,
+			description: description || "",
 		});
 
 		await Notice.create({
@@ -78,9 +90,16 @@ const duplicateTask = asyncHandler(async (req, res) => {
 
 		const task = await Task.findById(id);
 
+		if (!task) {
+			return res.status(404).json({
+				status: false,
+				message: "Task not found",
+			});
+		}
+
 		//alert users of the task
 		let text = "New task has been assigned to you";
-		if (team.team?.length > 1) {
+		if (task.team?.length > 1) {
 			text = text + ` and ${task.team?.length - 1} others.`;
 		}
 
@@ -99,26 +118,38 @@ const duplicateTask = asyncHandler(async (req, res) => {
 		};
 
 		const newTask = await Task.create({
-			...task,
 			title: "Duplicate - " + task.title,
+			team: task.team,
+			subTasks: task.subTasks,
+			assets: task.assets,
+			links: task.links,
+			priority: task.priority,
+			stage: task.stage,
+			date: task.date,
+			activities: [activity],
+			description: task.description,
+			isTrashed: false,
 		});
-
-		newTask.team = task.team;
-		newTask.subTasks = task.subTasks;
-		newTask.assets = task.assets;
-		newTask.links = task.links;
-		newTask.priority = task.priority;
-		newTask.stage = task.stage;
-		newTask.activities = activity;
-		newTask.description = task.description;
-
-		await newTask.save();
 
 		await Notice.create({
 			team: newTask.team,
 			text,
 			task: newTask._id,
 		});
+
+		const users = await User.find({
+			_id: newTask.team,
+		});
+
+		if (users) {
+			for (let i = 0; i < users.length; i++) {
+				const user = users[i];
+
+				await User.findByIdAndUpdate(user._id, {
+					$push: { tasks: newTask._id },
+				});
+			}
+		}
 
 		res
 			.status(200)
@@ -136,26 +167,34 @@ const updateTask = asyncHandler(async (req, res) => {
 	try {
 		const task = await Task.findById(id);
 
+		if (!task) {
+			return res.status(404).json({
+				status: false,
+				message: "Task not found",
+			});
+		}
+
 		let newLinks = [];
 
 		if (links) {
-			newLinks = links.split(",");
+			newLinks = Array.isArray(links) ? links : links.split(",");
 		}
 
-		task.title = title;
-		task.date = date;
-		task.priority = priority.toLowerCase();
-		task.assets = assets;
-		task.stage = stage.toLowerCase();
-		task.team = team;
-		task.links = newLinks;
-		task.description = description;
+		task.title = title || task.title;
+		task.date = date || task.date;
+		task.priority = priority ? priority.toLowerCase() : task.priority;
+		task.assets = assets || task.assets;
+		task.stage = stage ? stage.toLowerCase() : task.stage;
+		task.team = team || task.team;
+		task.links = newLinks.length > 0 ? newLinks : task.links;
+		task.description =
+			description !== undefined ? description : task.description;
 
 		await task.save();
 
 		res
 			.status(200)
-			.json({ status: true, message: "Task duplicated successfully." });
+			.json({ status: true, message: "Task updated successfully." });
 	} catch (error) {
 		return res.status(400).json({ status: false, message: error.message });
 	}
@@ -167,6 +206,13 @@ const updateTaskStage = asyncHandler(async (req, res) => {
 		const { stage } = req.body;
 
 		const task = await Task.findById(id);
+
+		if (!task) {
+			return res.status(404).json({
+				status: false,
+				message: "Task not found",
+			});
+		}
 
 		task.stage = stage.toLowerCase();
 
@@ -185,7 +231,24 @@ const updateSubTaskStage = asyncHandler(async (req, res) => {
 		const { taskId, subTaskId } = req.params;
 		const { status } = req.body;
 
-		await Task.findOneAndUpdate(
+		const task = await Task.findById(taskId);
+
+		if (!task) {
+			return res.status(404).json({
+				status: false,
+				message: "Task not found",
+			});
+		}
+
+		const subTask = task.subTasks.id(subTaskId);
+		if (!subTask) {
+			return res.status(404).json({
+				status: false,
+				message: "Sub-task not found",
+			});
+		}
+
+		const result = await Task.findOneAndUpdate(
 			{
 				_id: taskId,
 				"subTasks._id": subTaskId,
@@ -194,8 +257,16 @@ const updateSubTaskStage = asyncHandler(async (req, res) => {
 				$set: {
 					"subTasks.$.isCompleted": status,
 				},
-			}
+			},
+			{ new: true }
 		);
+
+		if (!result) {
+			return res.status(404).json({
+				status: false,
+				message: "Failed to update sub-task",
+			});
+		}
 
 		res.status(200).json({
 			status: true,
@@ -214,14 +285,28 @@ const createSubTask = asyncHandler(async (req, res) => {
 	const { id } = req.params;
 
 	try {
+		if (!title) {
+			return res.status(400).json({
+				status: false,
+				message: "Sub-task title is required",
+			});
+		}
+
 		const newSubTask = {
 			title,
-			date,
+			date: date || new Date(),
 			tag,
 			isCompleted: false,
 		};
 
 		const task = await Task.findById(id);
+
+		if (!task) {
+			return res.status(404).json({
+				status: false,
+				message: "Task not found",
+			});
+		}
 
 		task.subTasks.push(newSubTask);
 
@@ -270,7 +355,7 @@ const getTasks = asyncHandler(async (req, res) => {
 
 	res.status(200).json({
 		status: true,
-		tasks,
+		tasks: tasks || [],
 	});
 });
 
@@ -289,13 +374,23 @@ const getTask = asyncHandler(async (req, res) => {
 			})
 			.sort({ _id: -1 });
 
+		if (!task) {
+			return res.status(404).json({
+				status: false,
+				message: "Task not found",
+			});
+		}
+
 		res.status(200).json({
 			status: true,
 			task,
 		});
 	} catch (error) {
 		console.log(error);
-		throw new Error("Failed to fetch task", error);
+		return res.status(400).json({
+			status: false,
+			message: `Failed to fetch task: ${error.message}`,
+		});
 	}
 });
 
@@ -305,12 +400,27 @@ const postTaskActivity = asyncHandler(async (req, res) => {
 	const { type, activity } = req.body;
 
 	try {
+		if (!type || !activity) {
+			return res.status(400).json({
+				status: false,
+				message: "Activity type and content are required",
+			});
+		}
+
 		const task = await Task.findById(id);
+
+		if (!task) {
+			return res.status(404).json({
+				status: false,
+				message: "Task not found",
+			});
+		}
 
 		const data = {
 			type,
 			activity,
 			by: userId,
+			date: new Date(),
 		};
 		task.activities.push(data);
 
@@ -329,6 +439,13 @@ const trashTask = asyncHandler(async (req, res) => {
 
 	try {
 		const task = await Task.findById(id);
+
+		if (!task) {
+			return res.status(404).json({
+				status: false,
+				message: "Task not found",
+			});
+		}
 
 		task.isTrashed = true;
 
@@ -349,20 +466,38 @@ const deleteRestoreTask = asyncHandler(async (req, res) => {
 		const { actionType } = req.query;
 
 		if (actionType === "delete") {
-			await Task.findByIdAndDelete(id);
+			const task = await Task.findByIdAndDelete(id);
+			if (!task) {
+				return res.status(404).json({
+					status: false,
+					message: "Task not found",
+				});
+			}
 		} else if (actionType === "deleteAll") {
 			await Task.deleteMany({ isTrashed: true });
 		} else if (actionType === "restore") {
 			const resp = await Task.findById(id);
 
+			if (!resp) {
+				return res.status(404).json({
+					status: false,
+					message: "Task not found",
+				});
+			}
+
 			resp.isTrashed = false;
 
-			resp.save();
+			await resp.save();
 		} else if (actionType === "restoreAll") {
 			await Task.updateMany(
 				{ isTrashed: true },
 				{ $set: { isTrashed: false } }
 			);
+		} else {
+			return res.status(400).json({
+				status: false,
+				message: "Invalid action type",
+			});
 		}
 
 		res.status(200).json({

@@ -200,7 +200,7 @@ const Users = () => {
 						onClick={() => setOpen(true)}
 					/>
 				</div>
-				<div className="bg-white dark:bg-[#1f1f1f] px-2 md:px-4 py-4 shadow rounded">
+				<div className="bg-white px-2 md:px-4 py-4 shadow rounded">
 					<div className="text-center py-8">
 						<p className="text-lg mb-4 text-red-600">
 							{isUnauthorized
@@ -248,7 +248,7 @@ const Users = () => {
 						onClick={() => setOpen(true)}
 					/>
 				</div>
-				<div className="bg-white dark:bg-[#1f1f1f] px-2 md:px-4 py-4 shadow rounded">
+				<div className="bg-white px-2 md:px-4 py-4 shadow rounded">
 					{teamMembers.length === 0 ? (
 						<div className="text-center py-8 text-gray-500">
 							<p>No team members found.</p>

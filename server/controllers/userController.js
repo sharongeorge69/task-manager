@@ -78,7 +78,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const logoutUser = (req, res) => {
 	// Default to development settings if NODE_ENV is not explicitly set to "production"
 	const isProduction = process.env.NODE_ENV === "production";
-	
+
 	res.cookie("token", "", {
 		httpOnly: true,
 		secure: isProduction,
@@ -170,6 +170,10 @@ const markNotificationRead = asyncHandler(async (req, res) => {
 		res.status(201).json({ status: true, message: "Done" });
 	} catch (error) {
 		console.log(error);
+		return res.status(400).json({
+			status: false,
+			message: error.message || "Failed to mark notification as read",
+		});
 	}
 });
 
@@ -253,7 +257,7 @@ const changeUserPassword = asyncHandler(async (req, res) => {
 
 		res.status(201).json({
 			status: true,
-			message: `Password chnaged successfully.`,
+			message: `Password changed successfully.`,
 		});
 	} else {
 		res.status(404).json({ status: false, message: "User not found" });

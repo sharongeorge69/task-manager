@@ -41,4 +41,4 @@ app.use("/api", router);
 app.use(routeNotFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server is lisening on ${PORT}`));
+app.listen(PORT, () => console.log(`Server is listening on ${PORT}`));
